@@ -1,0 +1,9 @@
+span.error {
+    font-size: 16px;
+    color    : rgb(228, 29, 29);
+    padding  : 3px;
+}
+
+input:required:invalid {
+    border-color: #c00000;
+}

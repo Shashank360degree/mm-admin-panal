@@ -1,37 +1,44 @@
-import React, { useState } from 'react'
-import { TextField, Button, Typography, Container, FormControlLabel, Avatar, CssBaseline, Checkbox, Link, Grid, Box } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { TextField, Button, Typography, Container, Avatar, CssBaseline, Box, Grid } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { makeStyles } from '@mui/styles';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import './login.css';
+import { adminLogin } from '../../redux/actions/auth';
 const theme = createTheme();
-const useStyles = makeStyles(theme => ({
-    root: {
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      //padding: theme.spacing(2),
-  
-      '& .MuiTextField-root': {
-        //margin: theme.spacing(1),
-        width: '300px',
-      },
-      '& .MuiButtonBase-root': {
-        //margin: theme.spacing(2),
-      },
-    },
-  }));
-  
 export default function Login() {
-    const classes = useStyles();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const handleSubmit = (e) => {
-      e.preventDefault();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const initialState = { email: '', password: '' };
+  const [login, setForm] = useState(initialState);
+  const [error, setError] = useState(initialState);
+  const [token, setToken] = useState(localStorage.getItem('token'));
+  useEffect(() => {
+    setToken(localStorage.getItem('token'))
+    if (token) {
+      navigate('/dashboard');
     }
-    return (
-      <ThemeProvider theme={theme}>
+  },[navigate,token])
+  const handleChange = (e) => setForm({ ...login, [e.target.name]: e.target.value });
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    error.email = '';
+    error.password = '';
+    if (login.email === '') {
+      setError({ ...error, email: 'Invalid Email' });
+      return;
+    }
+    if (login.password === '') {
+      setError({ ...error, password: 'Invalid Password' });
+      return;
+    }
+    if (error.email || error.password) return;
+    dispatch(adminLogin(login, navigate));
+  }
+  
+  return (
+    <ThemeProvider theme={theme}>
       <Container component="main" maxWidth="xs">
         <CssBaseline />
         <Box
@@ -51,32 +58,28 @@ export default function Login() {
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
             <TextField
               margin="normal"
-              required
               fullWidth
               id="email"
               label="Email Address"
               name="email"
               autoComplete="email"
               autoFocus
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              value={login.email}
+              onChange={handleChange}
             />
+            {(error && error.email) ? <span className='error'> {error.email} </span> : ''}
             <TextField
               margin="normal"
-              required
               fullWidth
               name="password"
               label="Password"
               type="password"
               id="password"
               autoComplete="current-password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
+              value={login.password}
+              onChange={handleChange}
             />
-            <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
-              label="Remember me"
-            />
+            {(error && error.password) ? <span className='error'>  {error.password} </span> : ''}
             <Button
               type="submit"
               fullWidth
@@ -88,19 +91,14 @@ export default function Login() {
             </Button>
             <Grid container>
               <Grid item xs>
-                <Link href="#" variant="body2">
+                <Link to="forgot" variant="body2">
                   Forgot password?
-                </Link>
-              </Grid>
-              <Grid item>
-                <Link href="#" variant="body2">
-                  {"Don't have an account? Sign Up"}
                 </Link>
               </Grid>
             </Grid>
           </Box>
         </Box>
       </Container>
-      </ThemeProvider>
-    )
+    </ThemeProvider>
+  )
 }
